@@ -1,6 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Responsive scaling helpers
+const scale = SCREEN_WIDTH / 375; // 375 is a common base width (iPhone 11)
+const verticalScale = SCREEN_HEIGHT / 812; // 812 is a common base height
+const moderateScale = (size, factor = 0.5) => size + (scale * size - size) * factor;
 
 export default function WelcomeScreen() {
   const navigation = useNavigation();
@@ -17,11 +24,11 @@ export default function WelcomeScreen() {
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
         incididunt ut labore et dolore magna aliqua.
       </Text>
-      <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate('LoginScreen')}>
+      <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate('Login')}>
         <Text style={styles.loginText}>Log in</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('SignupScreen')}>
-        <Text style={styles.registerText}>Register</Text>
+      <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('Signup')}>
+        <Text style={styles.registerText}>Sign Up</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -33,55 +40,60 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f3f6',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 30,
-    paddingVertical: 20,
+    paddingHorizontal: moderateScale(24),
+    paddingVertical: moderateScale(16),
   },
   image: {
     width: '100%',
-    height: 350,
+    height: SCREEN_HEIGHT * 0.40, // 32% of screen height
+    marginBottom: moderateScale(10),
   },
   title: {
-    fontSize: 40,
-    fontWeight: '600',
+    fontSize: moderateScale(36),
     color: '#0a1734',
+    fontFamily: 'Sansation-Regular',
+    textAlign: 'center',
   },
   brand: {
-    fontSize: 40,
-    fontWeight: '700',
+    fontSize: moderateScale(38),
     color: '#0a1734',
-    marginBottom: 20,
+    fontFamily: 'Sansation-Bold',
+    marginBottom: moderateScale(18),
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: moderateScale(15),
     color: '#0a1734',
     textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 22,
+    marginBottom: moderateScale(32),
+    lineHeight: moderateScale(21),
   },
   loginButton: {
     backgroundColor: '#fdc856',
-    paddingVertical: 15,
+    paddingVertical: moderateScale(13),
     width: '100%',
-    borderRadius: 10,
-    marginBottom: 15,
+    borderRadius: moderateScale(10),
+    marginBottom: moderateScale(12),
   },
   loginText: {
     color: '#0a1734',
-    fontSize: 18,
+    fontSize: moderateScale(17),
     textAlign: 'center',
     fontWeight: '600',
+    fontFamily: 'Sansation-Bold',
   },
   registerButton: {
     borderColor: '#fdc856',
     borderWidth: 2,
-    paddingVertical: 15,
+    paddingVertical: moderateScale(13),
     width: '100%',
-    borderRadius: 10,
+    borderRadius: moderateScale(10),
   },
   registerText: {
     color: '#0a1734',
-    fontSize: 18,
+    fontSize: moderateScale(17),
     textAlign: 'center',
     fontWeight: '600',
+    fontFamily: 'Sansation-Bold',
   },
 });

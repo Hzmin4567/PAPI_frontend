@@ -1,9 +1,22 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, FlatList, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { UserContext } from '../context/UserContext';
 
 const LOYALTY_BG = require('../assets/Rectangle 73.png');
+
+const INVITE_CARDS = [
+  {
+    title: 'Give and get points',
+    desc: 'Get 500 points when your friend shares your code',
+    btn: 'Share invite code',
+  },
+  {
+    title: 'Bonus for inviting friends',
+    desc: 'Invite 3 friends and get a bonus reward!',
+    btn: 'Invite more friends',
+  },
+];
 
 export default function LoyaltyScreen({ navigation }) {
   const { user } = useContext(UserContext);
@@ -13,6 +26,8 @@ export default function LoyaltyScreen({ navigation }) {
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [rewards, setRewards] = useState([]);
+  const inviteSliderRef = useRef(null);
+  const [inviteIndex, setInviteIndex] = useState(0);
 
   // Fetch loyalty data from API
   useEffect(() => {
@@ -37,31 +52,42 @@ export default function LoyaltyScreen({ navigation }) {
     fetchLoyalty();
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setInviteIndex(prev => {
+        const next = (prev + 1) % INVITE_CARDS.length;
+        inviteSliderRef.current?.scrollToIndex({ index: next, animated: true });
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   const username = user?.name || 'User';
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#061437" />
-        </TouchableOpacity>
+    
         <Text style={styles.headerTitle}>Loyalty</Text>
       </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Loyalty Balance Card */}
         <ImageBackground source={LOYALTY_BG} style={styles.balanceCard} imageStyle={styles.balanceCardBg}>
-          <View style={styles.balanceLeft}>
-            <View style={styles.trophyCircle}>
+          <Text style={styles.balanceLabelAbove}>Loyalty Balance</Text>
+          <View style={styles.balanceRow}>
+            <View style={styles.trophyWrap}>
               <MaterialCommunityIcons name="trophy-outline" size={36} color="#FFD700" />
             </View>
+            <View style={styles.pointsWrap}>
+              <Text style={styles.balancePoints} numberOfLines={1} adjustsFontSizeToFit>{points !== null ? `${points}Pts` : <ActivityIndicator color="#fff" />}</Text>
+              <Text style={styles.balanceSub} numberOfLines={1} adjustsFontSizeToFit>{nextReward !== null ? `${nextReward} points till your next reward` : ''}</Text>
+            </View>
           </View>
-          <View style={styles.balanceRight}>
-            <Text style={styles.balanceLabel}>Loyalty Balance</Text>
-            <Text style={styles.balancePoints}>{points !== null ? `${points}Pts` : <ActivityIndicator color="#fff" />}</Text>
-            <Text style={styles.balanceSub}>{nextReward !== null ? `${nextReward} points till your next reward` : ''}</Text>
-            <Text style={styles.balanceUser}>{username}</Text>
-          </View>
+          {/* Dashed line divider */}
+          <View style={styles.dashedLine} />
+          <Text style={styles.balanceUserAligned}>{username}</Text>
         </ImageBackground>
         {/* Rewards Slider */}
         <FlatList
@@ -81,26 +107,24 @@ export default function LoyaltyScreen({ navigation }) {
           )}
         />
         {/* Referral/Invite Section */}
-        <ScrollView
+        <FlatList
+          ref={inviteSliderRef}
+          data={INVITE_CARDS}
+          keyExtractor={(_, idx) => idx.toString()}
           horizontal
+          pagingEnabled
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.inviteSlider}
-        >
-          <View style={styles.inviteCard}>
-            <Text style={styles.inviteTitle}>Give and get points</Text>
-            <Text style={styles.inviteDesc}>Get 500 points when your friend shares your code</Text>
-            <TouchableOpacity style={styles.inviteBtn} onPress={() => {/* TODO: share invite code */}}>
-              <Text style={styles.inviteBtnText}>Share invite code</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.inviteCard}>
-            <Text style={styles.inviteTitle}>Bonus for inviting friends</Text>
-            <Text style={styles.inviteDesc}>Invite 3 friends and get a bonus reward!</Text>
-            <TouchableOpacity style={styles.inviteBtn} onPress={() => {/* TODO: share invite code */}}>
-              <Text style={styles.inviteBtnText}>Invite more friends</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+          renderItem={({ item }) => (
+            <View style={styles.inviteCard}>
+              <Text style={styles.inviteTitle}>{item.title}</Text>
+              <Text style={styles.inviteDesc}>{item.desc}</Text>
+              <TouchableOpacity style={styles.inviteBtn}>
+                <Text style={styles.inviteBtnText}>{item.btn}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
         {/* Recent Activity */}
         <Text style={styles.activityTitle}>Recent Activity</Text>
         <View style={{ marginTop: 8 }}>
@@ -136,14 +160,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   backButton: { marginRight: 12 },
-  headerTitle: { fontSize: 22, color: '#061437', flex: 1, textAlign: 'center', fontFamily: 'Sansation-Bold' },
+  headerTitle: { 
+    fontSize: 22, 
+    color: '#061437', 
+    flex: 1, 
+    textAlign: 'center', 
+    fontFamily: 'Sansation-Bold' },
   scrollContent: { padding: 16, paddingBottom: 40 },
   balanceCard: {
-    flexDirection: 'row',
+    flexDirection: 'column', // Changed to column for better stacking
     alignItems: 'center',
     borderRadius: 8,
     overflow: 'hidden',
-    height: 200,
+    height: 225,
     backgroundColor: '#061437',
   },
   balanceCardBg: {
@@ -151,56 +180,72 @@ const styles = StyleSheet.create({
     opacity: 0.95,
     resizeMode: 'cover',
   },
-  balanceLeft: {
-    padding: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+  balanceLabelAbove: {
+    color: '#FFD700',
+    fontSize: 18,
+    fontFamily: 'Sansation-Bold',
+    marginTop:20,
+    marginRight:170,
+    marginBottom: 10,
+    textAlign: 'center',
   },
-  trophyCircle: {
+  balanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+    paddingHorizontal: 18,
+    width: '100%',
+  },
+  trophyWrap: {
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginRight: 20,
+    marginLeft:15,
   },
-  balanceRight: {
+  pointsWrap: {
     flex: 1,
-    paddingLeft: 8,
     justifyContent: 'center',
-  },
-  balanceLabel: {
-    color: '#FFD700',
-    fontSize: 14,
-    fontFamily: 'Sansation-Bold',
-    marginBottom: 2,
   },
   balancePoints: {
     color: '#fff',
     fontSize: 32,
     fontFamily: 'Sansation-Bold',
-    marginBottom: 2,
+    marginBottom: 0,
+    marginTop:10,
+    flexShrink: 1,
   },
   balanceSub: {
     color: '#fff',
     fontSize: 13,
     fontFamily: 'Sansation-Regular',
+    marginTop: 2,
     marginBottom: 2,
+    flexShrink: 1,
   },
-  balanceUser: {
+  balanceUserAligned: {
     color: '#fff',
-    fontSize: 15,
-    fontFamily: 'Sansation-Regular',
-    marginTop: 4,
+    fontSize: 20,
+    fontFamily: 'Sansation-Bold',
+    marginTop: 40,
+    marginRight:210,
+    textAlign: 'center',
   },
   inviteCard: {
     backgroundColor: '#FDC856',
     borderRadius: 8,
     padding: 18,
-    marginRight: 10, // Added margin for horizontal scroll
-    width: 325, // Fixed width for horizontal scroll
+    marginLeft:10,
+    marginRight: 9, // Added margin for horizontal scroll
+    height:200,
+    width: 315, // Fixed width for horizontal scroll
     overflow: 'hidden',
+    flexShrink: 0,
+    justifyContent: 'center',
   },
   inviteTitle: {
     fontSize: 15,
@@ -209,9 +254,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   inviteDesc: {
-    fontSize: 14,
+    fontSize: 20,
     fontFamily: 'Sansation-Regular',
     color: '#061437',
+    marginTop:20,
     marginBottom: 12,
   },
   inviteBtn: {
@@ -219,6 +265,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 10,
     alignItems: 'center',
+    marginTop:10,
   },
   inviteBtnText: {
     color: '#fff',
@@ -314,5 +361,17 @@ const styles = StyleSheet.create({
   inviteSlider: {
     paddingVertical: 2,
     marginBottom: 18,
+   
+  },
+  dashedLine: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 56,
+    borderBottomWidth: 2,
+    borderColor: 'rgba(255,255,255,0.7)',
+    borderStyle: 'dashed',
+    zIndex: 2,
+    marginBottom:15,
   },
 }); 
