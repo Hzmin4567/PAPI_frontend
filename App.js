@@ -89,6 +89,7 @@ export default function App() {
     return null; // Optionally, show a loading spinner here
   }
 
+
   return (
     <AuthProvider>
       <ExpenseProvider>
@@ -97,7 +98,7 @@ export default function App() {
             <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
               <Stack.Screen name="Splash" component={SplashScreen} />
               <Stack.Screen name="Welcome" component={WelcomeScreen} />
-              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="LoginScreen" component={LoginScreen} />
               <Stack.Screen name="Signup" component={SignupScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
               <Stack.Screen name="AppTabs" component={AppTabs} />
